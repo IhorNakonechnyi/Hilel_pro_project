@@ -1,27 +1,31 @@
 #ifndef COLLATZNUMBER_H
 #define COLLATZNUMBER_H
 
-#include<QPair>
-#include<QHash>
 #include<QString>
-#include<unordered_map>
+#include<vector>
+#include<atomic>
+#include<utility>
+#include<chrono>
+#include<limits>
+
 
 
 class CollatzNumber
 {
 private:
-    QPair<int,int> m_longestWay;//first number, second way to 1
-    //bool isResult=false;
+    std::pair<std::atomic<unsigned long long>,std::atomic<unsigned long long>> m_longestWay;//first number, second way to 1
 
+    std::vector<std::atomic<unsigned long long>> cache;
+
+    short percentage=0;
     const int m_rangeFrom=1;
-    int m_rangeTo=1;
+    int m_rangeTo;
 
-    short m_numberOfThreads=1;
+    short m_numberOfThreads;
 
-    std::unordered_map<int,int> CollatzeTree;
-    QPair<int, int> LongestWay;
+    std::chrono::milliseconds timeOfLastCalculating;
 
-    //void Preprocessing();
+    void Preprocessing();
     void ThreadsManager();
     void Computing();
     void QueueManager();
@@ -29,7 +33,7 @@ private:
 
 public:
     CollatzNumber()=delete;
-    CollatzNumber(int rangeTo, short numberOfThreads):m_rangeTo(rangeTo), m_numberOfThreads(numberOfThreads){};
+    CollatzNumber(int rangeTo, short numberOfThreads);
     ~CollatzNumber(){};
 
     CollatzNumber(const CollatzNumber &other)=delete;
@@ -37,7 +41,8 @@ public:
     CollatzNumber operator =(const CollatzNumber &other)=delete;
     CollatzNumber operator =(CollatzNumber &&other)=delete;
 
-    QPair<int, int> GetLongestWay(){return LongestWay;};
+    std::pair<int, unsigned long long> GetLongestWay();
+    std::chrono::milliseconds GetTime()const;
 
 };
 

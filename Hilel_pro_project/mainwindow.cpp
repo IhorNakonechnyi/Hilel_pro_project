@@ -1,10 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "CollatzNumber.h"
+
 #include <limits>
 #include <QThread>
-#include <QPair>
-
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -37,17 +36,17 @@ void MainWindow::CollatzStart()
     ui->buttonStop->setEnabled(true);
 
     CollatzNumber test(ui->spinBoxMaxNumber->value(), ui->sliderThreads->value());
-    QPair<int, int> result = test.GetLongestWay();
     ui->textOutput->setText("Number with longest way:\nNumber: "
-                            + QString::number(result.first)
+                            + QString::number(test.GetLongestWay().first)
                             + "\nWay steps: "
-                            + QString::number(result.second));
+                            + QString::number(test.GetLongestWay().second));
 
+    ui->textOutput->setText("Time: "+ QString::number(test.GetTime().count()));
 }
 void MainWindow::CollatzStop()
 {
     ui->buttonStop->setEnabled(false);
     ui->buttonStart->setEnabled(true);
 
-
+    //need to stop calculating
 }
