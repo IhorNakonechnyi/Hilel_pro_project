@@ -19,5 +19,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
+private slots:
+    void CollatzStart();
+    void CollatzStop();
 };
 #endif // MAINWINDOW_H
