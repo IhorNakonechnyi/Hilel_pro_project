@@ -36,6 +36,7 @@ void MainWindow::CollatzStart()
     ui->buttonStop->setEnabled(true);
 
     CollatzNumber test(ui->spinBoxMaxNumber->value(), ui->sliderThreads->value());
+    test.Calculating();
     ui->textOutput->setText("Number with longest way:\nNumber: "
                             + QString::number(test.GetLongestWay().first)
                             + "\nWay steps: "
