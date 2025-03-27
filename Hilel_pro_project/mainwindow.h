@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "CollatzNumber.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,8 +20,11 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    CollatzNumber* collatz = nullptr;
 private slots:
-    void CollatzStart();
-    void CollatzStop();
+    void Start();
+    void Stop();
+    void Exit();
+    void UpdateTextBox(QString text);
 };
 #endif // MAINWINDOW_H

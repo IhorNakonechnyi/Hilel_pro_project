@@ -2,56 +2,69 @@
 #define COLLATZNUMBER_H
 
 #include<QString>
+#include<QObject>
+#include<QMetaObject>
 #include<vector>
 #include<atomic>
 #include<utility>
 #include<chrono>
 #include<thread>
+#include<shared_mutex>
+//#include<limits>
 
 
-class CollatzNumber
+
+class CollatzNumber : public QObject
 {
+    Q_OBJECT
+signals:
+    void UpdateUI(QString text);
+
 private:
 //base data
     const int m_rangeFrom=1;
-    int m_rangeTo;
-    short m_numberOfThreads;
+    const int m_rangeTo=1;
+    const short m_numberOfThreads=1;
 
 //operating data
-    std::atomic<std::pair<int,unsigned long long>> m_longestWay;
-    std::vector<std::atomic<int>> m_cache;
-    std::atomic<int> m_currentIndex=0;
     std::vector<std::thread> m_vecThreads;
+    const unsigned long long m_edge;
+    std::atomic<int> m_currentIndex;
+    std::atomic<unsigned long long>* m_cache = nullptr;
 
 //indication
-    short percentageOfProcessing=0;
-    bool isFinished=false;
+    bool                isFinished  =   false;
+    std::atomic<bool>   isStopped   =   false;
 
 //results
-    std::pair<int, unsigned long long> result;
+    std::pair<std::atomic<int>,std::atomic<unsigned long long>> m_longestWay;
     std::chrono::milliseconds timeOfCalculating;
 
 //methods
     void ThreadsManager(short threads);
+    void TaskManager();
+    void CalcCollatz(int number);
 
 public slots:
-    void Computing();
+    void UpdateTextBox(int number, unsigned long long way);
+    void StopProcessing();
 
 public:
     CollatzNumber(int rangeTo, short numberOfThreads);
     ~CollatzNumber();
 
-//banned
+    //banned
     CollatzNumber()=delete;
     CollatzNumber(const CollatzNumber &other)=delete;
     CollatzNumber(CollatzNumber &&other)=delete;
     CollatzNumber operator =(const CollatzNumber &other)=delete;
     CollatzNumber operator =(CollatzNumber &&other)=delete;
 
-//core method
+    //core method
     void Calculating();
 
-//interface
+    //interface
+    bool Success()const;
     std::pair<int, unsigned long long> GetLongestWay();
     std::chrono::milliseconds GetTime()const;
 };

@@ -11,43 +11,88 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    collatz = new CollatzNumber(1,1);
+
     ui->labelSpinBoxMaxNumber->setContentsMargins(0,3,0,0);
     ui->spinBoxMaxNumber->setMaximum(static_cast<int>(std::numeric_limits<int>::max()));
-    ui->labelLimit->setText("<html><head/><body><p><span style=\" color:#ff0000;\">Max value: "+ QString::number(ui->spinBoxMaxNumber->maximum())+"</span></p></body></html>");
-
+    ui->labelLimit->setText("<html><head/><body><p><span style=\" color:#ff0000;\">Max value: "
+                            + QString::number(ui->spinBoxMaxNumber->maximum())+"</span></p></body></html>");
     ui->labelMaxTheads->setText(QString::number(ui->sliderThreads->maximum()));
-
-
     ui->sliderThreads->setMaximum(static_cast<int>(QThread::idealThreadCount()));
+
     connect(ui->sliderThreads,&QAbstractSlider::valueChanged, this,[this](int value){ui->labelThreads->setText(QString::number(value));});
 
-    connect(ui->buttonStart,&QPushButton::clicked,this, &MainWindow::CollatzStart);
-    connect(ui->buttonStop,&QPushButton::clicked,this, &MainWindow::CollatzStop);
-}
+    connect(ui->buttonStart,&QPushButton::clicked,this, &MainWindow::Start);
+    connect(ui->buttonStop,&QPushButton::clicked,this, &MainWindow::Stop);
+    connect(ui->buttonExit,&QPushButton::clicked,this, &MainWindow::Exit);
 
+    connect(collatz, &CollatzNumber::UpdateUI, this, &MainWindow::UpdateTextBox);
+}
 MainWindow::~MainWindow()
 {
     delete ui;
 }
 
-void MainWindow::CollatzStart()
+void MainWindow::Start()
 {
     ui->buttonStart->setEnabled(false);
     ui->buttonStop->setEnabled(true);
 
-    CollatzNumber test(ui->spinBoxMaxNumber->value(), ui->sliderThreads->value());
-    test.Calculating();
-    ui->textOutput->setText("Number with longest way:\nNumber: "
-                            + QString::number(test.GetLongestWay().first)
-                            + "\nWay steps: "
-                            + QString::number(test.GetLongestWay().second));
+    if (collatz) {
+        delete collatz;
+        collatz = nullptr;
+    }
 
-    ui->textOutput->setText("Time: "+ QString::number(test.GetTime().count()));
-}
-void MainWindow::CollatzStop()
-{
+    collatz = new CollatzNumber(ui->spinBoxMaxNumber->value(),
+                                ui->sliderThreads->value());
+    /*
+    collatz->moveToThread(QApplication::instance()->thread());
+
+    connect(collatz, &CollatzNumber::UpdateUI, this, [this](QString text) {
+        ui->textOutput->append(text);
+    });
+    */
+
+    collatz->Calculating();
+
+    if(collatz->Success())
+    {
+        ui->textOutput->append("Range from 1 to "+ QString::number(ui->spinBoxMaxNumber->value()));
+
+        ui->textOutput->append("Number with longest way: "
+                                + QString::number(collatz->GetLongestWay().first)
+                                + "\nWay steps: "
+                                + QString::number(collatz->GetLongestWay().second));
+
+        ui->textOutput->append("Time: "+ QString::number(collatz->GetTime().count())+" milliseconds\n");
+    }
+    else
+    {
+        ui->textOutput->append("Calculation isn`t finished!");
+    }
+
     ui->buttonStop->setEnabled(false);
     ui->buttonStart->setEnabled(true);
+};
 
-    //need to stop calculating
-}
+void MainWindow::Stop()
+{
+    collatz->StopProcessing();
+
+    qDebug()<<"Stop calculation";
+
+    ui->buttonStop->setEnabled(false);
+    ui->buttonStart->setEnabled(true);
+};
+
+void MainWindow::Exit()
+{
+    collatz->StopProcessing();
+
+    QApplication::quit();
+};
+
+void MainWindow::UpdateTextBox(QString text)
+{
+    ui->textOutput->append(text);
+};
