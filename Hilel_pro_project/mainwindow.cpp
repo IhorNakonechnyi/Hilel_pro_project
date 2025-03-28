@@ -32,6 +32,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//-------------------------------------------BUTTONS------------------------------------------------------
+
 void MainWindow::Start()
 {
     ui->buttonStart->setEnabled(false);

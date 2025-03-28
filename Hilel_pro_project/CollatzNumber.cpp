@@ -8,9 +8,10 @@ CollatzNumber::CollatzNumber(int rangeTo, short numberOfThreads)
         m_edge((std::numeric_limits<unsigned long long>::max() - 1)/3),
         m_longestWay(1,1)
 {
-    m_currentIndex.store(2);
-    m_cache.resize(rangeTo,0);
-    //this->m_cache =  new std::atomic <unsigned long long>[rangeTo+1]{0};
+    //m_currentIndex.store(2);
+    this->m_cache =  new std::atomic <unsigned long long>[rangeTo+1]{0};
+    m_cache[1].store(0);
+    m_cache[2].store(1);
 };
 
 CollatzNumber::~CollatzNumber()
@@ -51,8 +52,17 @@ void CollatzNumber::ThreadsManager(short threads)
 
     m_vecThreads.clear();
 
+    int start=3;
+    int end=m_rangeTo/m_numberOfThreads;
+
+
     for (size_t n = 0; n < threads; ++n) {
-        m_vecThreads.emplace_back(std::thread(&CollatzNumber::TaskManager, this));
+        m_vecThreads.emplace_back(std::thread(&CollatzNumber::TaskManager, this,start, end));
+        if(n==threads+1)
+            m_vecThreads.emplace_back(std::thread(&CollatzNumber::TaskManager, this,start, m_rangeTo));
+
+        start=end+1;
+        end+=m_rangeTo/m_numberOfThreads;
     }
 
     for (auto& thread : m_vecThreads) {
@@ -61,50 +71,48 @@ void CollatzNumber::ThreadsManager(short threads)
     }
 };
 
-void CollatzNumber::TaskManager()
+void CollatzNumber::TaskManager(int start, int end)
 {
-    while(true)
+    int currentNumber=start;
+    while(currentNumber <= end)
     {
         if (isStopped.load())
             return;
 
-        int currentNumber = m_currentIndex.fetch_add(1);
+        ++currentNumber;
 
-        if(currentNumber >= m_rangeTo)
-        {
-            isFinished = true;
-            return;
-        }
-
-        CalcCollatz(currentNumber);
+        CalcCollatz(currentNumber, end);
     }
+
+    if(currentNumber >= m_rangeTo)
+        isFinished = true;
 };
 
-void CollatzNumber::CalcCollatz(int number)
+void CollatzNumber::CalcCollatz(int number, int end)
 {
     unsigned long long tempNumber = number;
     unsigned long long tempWay = 0;
     std::vector<unsigned long long> localStack;
-    localStack.reserve(1000);
+    localStack.reserve(100000);
     bool flag=false;
 
     {
         std::shared_lock<std::shared_mutex> lock(m_cacheMutex);
-        if(m_cache[number] == std::numeric_limits<unsigned long long>::max()){
+        if(m_cache[number].load() == std::numeric_limits<unsigned long long>::max()){
             return;
         }
     }
 
     while(tempNumber != 1)
     {        
-        if(tempNumber <= m_cache.size()-1){
+        if(tempNumber <= m_rangeTo){
             std::shared_lock<std::shared_mutex> lock(m_cacheMutex);
-            if (m_cache[tempNumber] != 0)
+            if (m_cache[tempNumber].load() != 0)
             {
-                if(m_cache[tempNumber]==std::numeric_limits<unsigned long long>::max()){
+                if(m_cache[tempNumber].load()==std::numeric_limits<unsigned long long>::max()){
                     flag = true;
                 }
-                tempWay = m_cache[tempNumber];
+                tempWay = m_cache[tempNumber].load();
                 break;
             }
         }
@@ -121,23 +129,21 @@ void CollatzNumber::CalcCollatz(int number)
         }    
     }
 
-
     if(localStack.empty())
         return;
-
 
     for (auto it = localStack.rbegin(); it != localStack.rend(); ++it)
     {
         if(flag){
             std::shared_lock<std::shared_mutex> lock(m_cacheMutex);
-            m_cache[*it]= std::numeric_limits<unsigned long long>::max();
+            m_cache[*it].store(std::numeric_limits<unsigned long long>::max());
             continue;
         }
 
-        if(*it < m_cache.size())
+        if(*it < m_rangeTo)
         {
             std::shared_lock<std::shared_mutex> lock(m_cacheMutex);
-            m_cache[*it] = tempWay+1;
+            m_cache[*it].store(tempWay+1);
         }
 
         ++tempWay;

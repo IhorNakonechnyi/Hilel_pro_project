@@ -10,8 +10,6 @@
 #include<chrono>
 #include<thread>
 #include<shared_mutex>
-#include<mutex>
-//#include<limits>
 
 
 
@@ -28,9 +26,8 @@ private:
 //operating data
     std::vector<std::thread> m_vecThreads;
     const unsigned long long m_edge;
-    std::atomic<unsigned long long> m_currentIndex;
-    //std::atomic<unsigned long long>* m_cache= nullptr;
-    std::vector<unsigned long long> m_cache;
+    //std::atomic<unsigned long long> m_currentIndex;
+    std::atomic<unsigned long long>* m_cache= nullptr;
     std::shared_mutex m_cacheMutex;
     std::shared_mutex m_longestWayMutex;
 
@@ -44,8 +41,8 @@ private:
 
 //methods
     void ThreadsManager(short threads);
-    void TaskManager();
-    void CalcCollatz(int number);
+    void TaskManager(int start, int end);
+    void CalcCollatz(int number, int end);
 
 public slots:
     void StopProcessing();
