@@ -10,6 +10,7 @@
 #include<chrono>
 #include<thread>
 #include<shared_mutex>
+#include<mutex>
 //#include<limits>
 
 
@@ -17,8 +18,6 @@
 class CollatzNumber : public QObject
 {
     Q_OBJECT
-signals:
-    void UpdateUI(QString text);
 
 private:
 //base data
@@ -29,15 +28,18 @@ private:
 //operating data
     std::vector<std::thread> m_vecThreads;
     const unsigned long long m_edge;
-    std::atomic<int> m_currentIndex;
-    std::atomic<unsigned long long>* m_cache = nullptr;
+    std::atomic<unsigned long long> m_currentIndex;
+    //std::atomic<unsigned long long>* m_cache= nullptr;
+    std::vector<unsigned long long> m_cache;
+    std::shared_mutex m_cacheMutex;
+    std::shared_mutex m_longestWayMutex;
 
 //indication
     bool                isFinished  =   false;
     std::atomic<bool>   isStopped   =   false;
 
 //results
-    std::pair<std::atomic<int>,std::atomic<unsigned long long>> m_longestWay;
+    std::pair<int,unsigned long long> m_longestWay;
     std::chrono::milliseconds timeOfCalculating;
 
 //methods
@@ -46,7 +48,6 @@ private:
     void CalcCollatz(int number);
 
 public slots:
-    void UpdateTextBox(int number, unsigned long long way);
     void StopProcessing();
 
 public:

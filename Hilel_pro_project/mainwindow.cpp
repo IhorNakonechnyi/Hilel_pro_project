@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonStop,&QPushButton::clicked,this, &MainWindow::Stop);
     connect(ui->buttonExit,&QPushButton::clicked,this, &MainWindow::Exit);
 
-    connect(collatz, &CollatzNumber::UpdateUI, this, &MainWindow::UpdateTextBox);
 }
 MainWindow::~MainWindow()
 {
@@ -43,15 +42,9 @@ void MainWindow::Start()
         collatz = nullptr;
     }
 
-    collatz = new CollatzNumber(ui->spinBoxMaxNumber->value(),
-                                ui->sliderThreads->value());
-    /*
-    collatz->moveToThread(QApplication::instance()->thread());
+    collatz = new CollatzNumber(ui->spinBoxMaxNumber->value(),ui->sliderThreads->value());
 
-    connect(collatz, &CollatzNumber::UpdateUI, this, [this](QString text) {
-        ui->textOutput->append(text);
-    });
-    */
+    ui->textOutput->append("Processing...");
 
     collatz->Calculating();
 
@@ -92,7 +85,3 @@ void MainWindow::Exit()
     QApplication::quit();
 };
 
-void MainWindow::UpdateTextBox(QString text)
-{
-    ui->textOutput->append(text);
-};

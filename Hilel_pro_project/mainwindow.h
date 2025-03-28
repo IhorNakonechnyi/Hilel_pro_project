@@ -25,6 +25,5 @@ private slots:
     void Start();
     void Stop();
     void Exit();
-    void UpdateTextBox(QString text);
 };
 #endif // MAINWINDOW_H
